@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "crawler": "^1.0.5"
+    "crawler": "^1.0.5",
+    "mongoose": "^4.11.6",
+    "superagent": "^3.5.2"
   }
 }

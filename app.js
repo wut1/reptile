@@ -103,26 +103,14 @@ function paUser(url, article) {
 
 function saveData(article, userObj) {
     var user = new User(userObj);
-    var queryUser = User.where({ id: user.id });
-    queryUser.findOne(function(err, User) {
+    user.save(function(err) {
         if (err) return;
-        if (!User) {
-            user.save(function(err) {
-                if (err) return;
-            })
-        }
     })
     var articleObj = Object.assign({}, {
         _creator: user.id
     }, article)
     var article1 = new Article(articleObj);
-    var query = Article.where({ id: articleObj.id });
-    query.findOne(function(err, Article) {
+    article1.save(function(err) {
         if (err) return;
-        if (!Article) {
-            article1.save(function(err) {
-                if (err) return;
-            })
-        }
-    });
+    })
 }

@@ -9,7 +9,7 @@ var Crawler = require("crawler");
 var Article = require('./module/Article');
 var User = require('./module/User');
 var c = new Crawler({
-    maxConnections: 10,
+    maxConnections: 20,
     // This will be called for each crawled page
     callback: function(error, res, done) {
         if (error) {
@@ -50,7 +50,12 @@ var c = new Crawler({
 });
 
 // Queue just one URL, with default callback
-c.queue('http://www.jianshu.com/c/e50258a6a44b');
+
+for (var i = 1; i <= 10; i++) {
+    c.queue({ uri: 'http://www.jianshu.com/c/e50258a6a44b?order_by=added_at&page=' + i });
+}
+
+
 
 function paArticle(url, userUrl, obj) {
     c.queue([{

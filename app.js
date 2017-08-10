@@ -1,4 +1,7 @@
 var mongoose = require('mongoose');
+var cheerio = require('cheerio');
+var iconv = require('iconv-lite');
+var escaper = require("true-html-escape");
 mongoose.connect('mongodb://localhost:27017/test');
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -64,9 +67,10 @@ function paArticle(url, userUrl, obj) {
             if (error) {
                 console.log(error);
             } else {
-                var $ = res.$;
-                var content = $('.author').next().html();
-                var article = Object.assign({}, { content: content }, obj);
+               var $ = res.$;     
+                var content = $('.author').next().html(),
+                contentHtml = escaper.unescape(content);
+                var article = Object.assign({}, { content: contentHtml }, obj);
                 paUser(userUrl, article);
             }
             done();

@@ -2,9 +2,7 @@ var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/test');
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function() {
-    console.log('mongdb连接上!')
-});
+
 var Crawler = require("crawler");
 var Article = require('./module/Article');
 var User = require('./module/User');
@@ -22,7 +20,8 @@ var c = new Crawler({
                 var title = $(this).find('.title').text();
                 var $avatar = $(this).find('.avatar');
                 var userUrl = $avatar.attr('href');
-                var time = Date($(this).find('.time').data());
+                var timeText = $(this).find('.time').data('shared-at');
+                var time = new Date(timeText);
                 var $meta = $(this).find('.meta');
                 var look = +$meta.children('a').eq(0).text();
                 var comments = +$meta.children('a').eq(1).text();
@@ -103,14 +102,16 @@ function paUser(url, article) {
 
 function saveData(article, userObj) {
     var user = new User(userObj);
-    user.save(function(err) {
-        if (err) return;
-    })
     var articleObj = Object.assign({}, {
-        _creator: user.id
-    }, article)
+            _creator: user.id
+        }, article)
     var article1 = new Article(articleObj);
-    article1.save(function(err) {
-        if (err) return;
+        article1.save(function(err) {
+            if (err) return;
+        })
+    user.notes.push(article1)
+    user.save(function(err) {
+        if (err) return;    
     })
+    
 }

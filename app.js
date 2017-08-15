@@ -68,8 +68,13 @@ function paArticle(url, userUrl, obj) {
                 console.log(error);
             } else {
                var $ = res.$;     
-                var content = $('.author').next().html(),
-                contentHtml = escaper.unescape(content);
+                var content = $('.author').next();
+                content.find('.image-caption').each(function(i){
+                    if($(this).text == '图片发自简书App'){
+                        $(this).remove();
+                    }
+                })
+                contentHtml = escaper.unescape(content.html());
                 var article = Object.assign({}, { content: contentHtml }, obj);
                 paUser(userUrl, article);
             }

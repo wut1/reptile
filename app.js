@@ -30,7 +30,7 @@ var c = new Crawler({
                 var comments = +$meta.children('a').eq(1).text();
                 var favs = $meta.children('span').eq(0).text();
                 var obj = {
-                        id: id,
+                        _id: id,
                         title: title,
                         time: time,
                         meta: {
@@ -53,11 +53,14 @@ var c = new Crawler({
 
 // Queue just one URL, with default callback
 
-for (var i = 1; i <= 10; i++) {
-    c.queue({ uri: 'http://www.jianshu.com/c/e50258a6a44b?order_by=added_at&page=' + i });
-}
+// for (var i = 1; i <= 10; i++) {
+//     c.queue({ uri: 'http://www.jianshu.com/c/e50258a6a44b?order_by=added_at&page=' + i });
+// }
 
-
+Article.find().sort({ time: 'desc' }).limit(2).skip(1).populate('_creator').exec(function(err, articles) {
+    if (err) return;
+    console.log(articles)
+});
 
 function paArticle(url, userUrl, obj) {
     c.queue([{
@@ -67,10 +70,10 @@ function paArticle(url, userUrl, obj) {
             if (error) {
                 console.log(error);
             } else {
-               var $ = res.$;     
+                var $ = res.$;
                 var content = $('.author').next();
-                content.find('.image-caption').each(function(i){
-                    if($(this).text == '图片发自简书App'){
+                content.find('.image-caption').each(function(i) {
+                    if ($(this).text == '图片发自简书App') {
                         $(this).remove();
                     }
                 })
@@ -97,7 +100,7 @@ function paUser(url, article) {
                 var avatar = $user.children('img').attr('src');
                 var name = $('.name').eq(0).text();
                 var user = {
-                    id: id,
+                    _id: id,
                     avatar: avatar,
                     name: name
                 }
@@ -111,16 +114,16 @@ function paUser(url, article) {
 
 function saveData(article, userObj) {
     var user = new User(userObj);
-    var articleObj = Object.assign({}, {
-            _creator: user.id
+    //user.notes.push(article1)
+    user.save(function(err) {
+        if (err) return;
+        var articleObj = Object.assign({}, {
+            _creator: user._id
         }, article)
-    var article1 = new Article(articleObj);
+        var article1 = new Article(articleObj);
         article1.save(function(err) {
             if (err) return;
         })
-    user.notes.push(article1)
-    user.save(function(err) {
-        if (err) return;    
     })
-    
+
 }

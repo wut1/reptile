@@ -3,9 +3,11 @@ var cheerio = require('cheerio');
 var iconv = require('iconv-lite');
 var escaper = require("true-html-escape");
 mongoose.connect('mongodb://localhost:27017/test');
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-
+    var db = mongoose.connection;
+    db.on('error', console.error.bind(console, 'connection error:'));
+    db.once('open', function() {
+      console.log("连接上了")
+    });
 var Crawler = require("crawler");
 var Article = require('./module/Article');
 var User = require('./module/User');
@@ -53,14 +55,14 @@ var c = new Crawler({
 
 // Queue just one URL, with default callback
 
-// for (var i = 1; i <= 10; i++) {
-//     c.queue({ uri: 'http://www.jianshu.com/c/e50258a6a44b?order_by=added_at&page=' + i });
-// }
+for (var i = 1; i <= 10; i++) {
+    c.queue({ uri: 'http://www.jianshu.com/c/e50258a6a44b?order_by=added_at&page=' + i });
+}
 
-Article.find().sort({ time: 'desc' }).limit(2).skip(1).populate('_creator').exec(function(err, articles) {
-    if (err) return;
-    console.log(articles)
-});
+// Article.find().sort({ time: 'desc' }).limit(2).skip(1).populate('_creator').exec(function(err, articles) {
+//     if (err) return;
+//     console.log(articles)
+// });
 
 function paArticle(url, userUrl, obj) {
     c.queue([{

@@ -2,11 +2,13 @@ var mongoose = require('mongoose');
 var cheerio = require('cheerio');
 var iconv = require('iconv-lite');
 var escaper = require("true-html-escape");
-mongoose.connect('mongodb://localhost:27017/test');
+var dotenv = require('dotenv');
+dotenv.config();
+mongoose.connect(process.env.MONGODB_URI);
     var db = mongoose.connection;
     db.on('error', console.error.bind(console, 'connection error:'));
     db.once('open', function() {
-      console.log("连接上了")
+      console.log("数据库连接上了")
     });
 var Crawler = require("crawler");
 var Article = require('./module/Article');
@@ -32,7 +34,7 @@ var c = new Crawler({
                 var comments = +$meta.children('a').eq(1).text();
                 var favs = $meta.children('span').eq(0).text();
                 var obj = {
-                        _id: id,
+                        id: id,
                         title: title,
                         time: time,
                         meta: {
@@ -59,10 +61,6 @@ for (var i = 1; i <= 10; i++) {
     c.queue({ uri: 'http://www.jianshu.com/c/e50258a6a44b?order_by=added_at&page=' + i });
 }
 
-// Article.find().sort({ time: 'desc' }).limit(2).skip(1).populate('_creator').exec(function(err, articles) {
-//     if (err) return;
-//     console.log(articles)
-// });
 
 function paArticle(url, userUrl, obj) {
     c.queue([{
@@ -102,7 +100,7 @@ function paUser(url, article) {
                 var avatar = $user.children('img').attr('src');
                 var name = $('.name').eq(0).text();
                 var user = {
-                    _id: id,
+                    id: id,
                     avatar: avatar,
                     name: name
                 }

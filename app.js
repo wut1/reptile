@@ -2,9 +2,9 @@ var mongoose = require('mongoose');
 var cheerio = require('cheerio');
 var iconv = require('iconv-lite');
 var escaper = require("true-html-escape");
-var dotenv = require('dotenv');
-dotenv.config();
-mongoose.connect(process.env.MONGODB_URI);
+// var dotenv = require('dotenv');
+// dotenv.config();
+mongoose.connect('mongodb://localhost:27017/test');
     var db = mongoose.connection;
     db.on('error', console.error.bind(console, 'connection error:'));
     db.once('open', function() {
@@ -56,10 +56,18 @@ var c = new Crawler({
 });
 
 // Queue just one URL, with default callback
-
-for (var i = 1; i <= 10; i++) {
-    c.queue({ uri: 'http://www.jianshu.com/c/e50258a6a44b?order_by=added_at&page=' + i });
+function initPa(){
+    for (var i = 1; i <= 10; i++) {
+        c.queue({ uri: 'http://www.jianshu.com/c/e50258a6a44b?order_by=added_at&page=' + i });
+    }
 }
+
+setInterval(function(){
+    initPa();
+},60*60*1000)
+
+initPa();
+
 
 
 function paArticle(url, userUrl, obj) {
@@ -74,7 +82,7 @@ function paArticle(url, userUrl, obj) {
                 var content = $('.author').next();
                 content.find('.image-caption').each(function(i) {
                     if ($(this).text == '图片发自简书App') {
-                        $(this).remove();
+                        $(this).text = '图片来源未知';
                     }
                 })
                 contentHtml = escaper.unescape(content.html());

@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var articleSchema = new Schema({
-    id: { type: Number, unique: true },
+    id: { type: String, unique: true },
     _creator: { type: String, ref: 'User' },
     title: String,
     time: Date,

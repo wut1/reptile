@@ -1,7 +1,6 @@
 var mongoose = require('mongoose');
 var cheerio = require('cheerio');
 var iconv = require('iconv-lite');
-var escaper = require("true-html-escape");
 // var dotenv = require('dotenv');
 // dotenv.config();
 mongoose.connect('mongodb://localhost:27017/test');
@@ -14,15 +13,22 @@ var Crawler = require("crawler");
 var Article = require('./module/Article');
 var User = require('./module/User');
 var c = new Crawler({
-    maxConnections: 50,
+    maxConnections: 10,
+    //rateLimit: 100,
     // This will be called for each crawled page
+    jQuery: {
+        name: 'cheerio',
+        options: {
+            decodeEntities: false
+        }
+    },
     callback: function(error, res, done) {
         if (error) {
             console.log(error);
         } else {
             var $ = res.$;
             $('.note-list').children('li').each(function(i) {
-                var id = +$(this).data('note-id');
+                var id = $(this).data('note-id');
                 var articleUrl = $(this).find('.title').attr('href');
                 var title = $(this).find('.title').text();
                 var $avatar = $(this).find('.avatar');
@@ -34,22 +40,18 @@ var c = new Crawler({
                 var comments = +$meta.children('a').eq(1).text();
                 var favs = $meta.children('span').eq(0).text();
                 var obj = {
-                        id: id,
-                        title: title,
-                        time: time,
-                        meta: {
-                            look: look,
-                            favs: favs,
-                            comments: comments,
-                        }
+                    id: id,
+                    title: title,
+                    time: time,
+                    meta: {
+                        look: look,
+                        favs: favs,
+                        comments: comments,
                     }
-                    //if (i == 0) {
+                }
                 paArticle(articleUrl, userUrl, obj);
-                //}
-            })
 
-            // $ is Cheerio by default
-            //a lean implementation of core jQuery designed specifically for the server
+            })
         }
         done();
     }
@@ -57,15 +59,12 @@ var c = new Crawler({
 
 // Queue just one URL, with default callback
 function initPa() {
-    //var arr=[];
+    var arr = [];
     for (var i = 1; i <= 10; i++) {
-        // arr.push('http://www.jianshu.com/c/e50258a6a44b?order_by=added_at&page=' + i)
-        setTimeout(function() {
-            c.queue('http://www.jianshu.com/c/e50258a6a44b?order_by=added_at&page=' + i)
-        })
+        arr.push('http://www.jianshu.com/c/e50258a6a44b?order_by=added_at&page=' + i)
 
     }
-
+    c.queue(arr)
 }
 
 setInterval(function() {
@@ -95,7 +94,7 @@ function paArticle(url, userUrl, obj) {
                     var src = $(this).attr('src');
                     $(this).attr('src', 'http:' + src);
                 })
-                contentHtml = escaper.unescape(content.html());
+                var contentHtml = content.html();
                 var article = Object.assign({}, { content: contentHtml }, obj);
                 paUser(userUrl, article);
             }
@@ -132,14 +131,27 @@ var i = 0;
 
 function saveData(article, userObj) {
     var user = new User(userObj);
-    user.save(function(err) {
-        var articleObj = Object.assign({}, {
-            _creator: user._id
-        }, article)
-        var article1 = new Article(articleObj);
-        article1.save(function(err) {
-            if (err) { return };
-        })
+    User.findOne({ id: userObj.id }, (err, userModel) => {
+        if (err) return;
+        if (!userModel) {
+            user.save(function(error, usm) {
+                if (error) return;
+                var articleObj = Object.assign({}, {
+                    _creator: usm._id
+                }, article)
+                var article1 = new Article(articleObj);
+                article1.save(function(error1) {
+                    if (error1) { return };
+                })
+            })
+        } else {
+            var articleObj = Object.assign({}, {
+                _creator: userModel._id
+            }, article)
+            var article1 = new Article(articleObj);
+            article1.save(function(error) {
+                if (error) { return };
+            })
+        }
     })
-
 }
